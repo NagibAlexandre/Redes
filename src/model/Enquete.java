@@ -9,12 +9,12 @@ public class Enquete {
     private boolean status; // false for open, true for closed
 
 
-    public Enquete(String titulo, List<Candidato> candidatos, String tempoAbertura, String tempoDuracao) {
+    public Enquete(String titulo, List<Candidato> candidatos, String tempoAbertura, String tempoDuracao, boolean status) {
         this.titulo = titulo;
         this.candidatos = candidatos;
         this.tempoAbertura = tempoAbertura;
         this.tempoDuracao = tempoDuracao;
-        this.status = false; // Initially closed
+        this.status =  status; // Initially closed
     }
     public String getTitulo() {
         return titulo;

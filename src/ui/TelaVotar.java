@@ -3,15 +3,16 @@ package ui;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
-import model.Candidato;
 import model.Enquete;
+import model.Candidato;
+import client.ClienteTCP;
+import client.ClienteUDP;
 
-public class TelaVotar extends JFrame {
-
+public class TelaVotar extends JFrame implements ClienteUDP.AtualizacaoListener {
     private Enquete enquete;
+    private JLayeredPane layeredPane;
 
-    public TelaVotar(Enquete enquete) {
-        this.enquete = enquete;
+    public TelaVotar() {
         this.setTitle("Trabalho Pratico Redes");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(1300, 950);
@@ -24,16 +25,49 @@ public class TelaVotar extends JFrame {
         BackgroundLabel background = new BackgroundLabel("PUC MINAS");
         background.setBounds(0, 0, 1300, 950);
 
-        JLayeredPane layeredPane = new JLayeredPane();
+        layeredPane = new JLayeredPane();
         layeredPane.setPreferredSize(new Dimension(1300, 950));
         layeredPane.add(background, JLayeredPane.DEFAULT_LAYER);
 
-        barraInformacoes(layeredPane);
-        adicionarCardsGrid(layeredPane);
+        // Inicializa a enquete com dados do servidor
+        enquete = ClienteTCP.obterInformacoesEnquete();
+        if (enquete != null) {
+            barraInformacoes(layeredPane);
+            adicionarCardsGrid(layeredPane);
+        }
+
+        // Inicia o cliente UDP para receber atualizações
+        ClienteUDP.iniciarRecebimento(this);
 
         this.setContentPane(layeredPane);
         this.pack();
         this.setVisible(true);
+    }
+
+    @Override
+    public void onAtualizacao(Enquete novaEnquete) {
+        // Atualiza a UI na thread de eventos
+        SwingUtilities.invokeLater(() -> {
+            enquete = novaEnquete;
+            atualizarUI();
+        });
+    }
+
+    private void atualizarUI() {
+        // Remove apenas os componentes da camada PALETTE_LAYER
+        Component[] components = layeredPane.getComponents();
+        for (Component comp : components) {
+            if (layeredPane.getLayer(comp) == JLayeredPane.PALETTE_LAYER) {
+                layeredPane.remove(comp);
+            }
+        }
+
+        if (enquete != null) {
+            barraInformacoes(layeredPane);
+            adicionarCardsGrid(layeredPane);
+            layeredPane.revalidate();
+            layeredPane.repaint();
+        }
     }
 
     private void barraInformacoes(JLayeredPane pane) {
@@ -90,16 +124,16 @@ public class TelaVotar extends JFrame {
         int cardHeight = 140;
         int spacing = 30;
         int startX = 60;
-        int startY = 120; // abaixo da barra superior
+        int startY = 120;
 
         Color cardBg = new Color(60, 60, 60, 220);
         Color textColor = new Color(230, 230, 230);
         Font nomeFont = new Font("Segoe UI", Font.BOLD, 16);
-        Font votosFont = new Font("Segoe UI", Font.PLAIN, 14);
+        Font subFont = new Font("Segoe UI", Font.PLAIN, 14);
         Font buttonFont = new Font("Segoe UI", Font.BOLD, 14);
 
-        for (int i = 0; i < candidatos.size(); i++) {
-            Candidato candidato = candidatos.get(i);
+        for (Candidato candidato : candidatos) {
+            int i = candidatos.indexOf(candidato);
             int linha = i / cardsPorLinha;
             int coluna = i % cardsPorLinha;
             int x = startX + coluna * (cardWidth + spacing);
@@ -121,19 +155,28 @@ public class TelaVotar extends JFrame {
             card.setOpaque(false);
 
             JLabel nomeLabel = new JLabel(candidato.getNome());
-            nomeLabel.setBounds(10, 10, cardWidth - 20, 30);
+            nomeLabel.setBounds(10, 15, cardWidth - 20, 25);
             nomeLabel.setFont(nomeFont);
             nomeLabel.setForeground(textColor);
             nomeLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-            JLabel votosLabel = new JLabel("Votos: " + candidato.getVotos());
-            votosLabel.setBounds(10, 45, cardWidth - 20, 25);
-            votosLabel.setFont(votosFont);
+            // Painel para votos com ícone
+            JPanel votosPanel = new JPanel();
+            votosPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 0));
+            votosPanel.setBounds(10, 40, cardWidth - 20, 25);
+            votosPanel.setOpaque(false);
+
+            JLabel votosIcon = new JLabel("🗳️");
+            votosIcon.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            votosPanel.add(votosIcon);
+
+            JLabel votosLabel = new JLabel(candidato.getVotos() + " votos");
+            votosLabel.setFont(subFont);
             votosLabel.setForeground(textColor);
-            votosLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            votosPanel.add(votosLabel);
 
             JButton votarButton = new JButton("Votar");
-            votarButton.setBounds(25, 85, cardWidth - 50, 35);
+            votarButton.setBounds(25, 75, cardWidth - 50, 35);
             votarButton.setFont(buttonFont);
             votarButton.setForeground(textColor);
             votarButton.setBackground(new Color(100, 100, 100));
@@ -141,20 +184,13 @@ public class TelaVotar extends JFrame {
             votarButton.setBorderPainted(false);
             votarButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
             votarButton.addActionListener(e -> {
-                candidato.incrementarVoto();
-                votosLabel.setText("Votos: " + candidato.getVotos());
-                // Atualizar o label do mais votado na barra superior
-                pane.removeAll();
-                BackgroundLabel background = new BackgroundLabel("PUC MINAS");
-                background.setBounds(0, 0, 1300, 950);
-                pane.add(background, JLayeredPane.DEFAULT_LAYER);
-                barraInformacoes(pane);
-                adicionarCardsGrid(pane);
-                pane.repaint();
+                String resposta = ClienteTCP.enviarVoto(candidato.getNome());
+                JOptionPane.showMessageDialog(null, resposta);
+                atualizarUI(); // Atualiza imediatamente após votar
             });
 
             card.add(nomeLabel);
-            card.add(votosLabel);
+            card.add(votosPanel);
             card.add(votarButton);
             pane.add(card, JLayeredPane.PALETTE_LAYER);
         }
