@@ -1,18 +1,17 @@
 package ui;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 import model.Candidato;
+import model.Enquete;
 
 public class TelaVotar extends JFrame {
 
-    private List<Candidato> candidatos;
-    private static String tempo = "00:00:00"; // Placeholder for time, can be updated with a timer
-    private static String abertura = "01/06/2024 14:00"; // Placeholder for opening time
-    private static boolean status = false; // false for open, true for closed
+    private Enquete enquete;
 
-    public TelaVotar(List<Candidato> candidatos) {
-        this.candidatos = candidatos;
+    public TelaVotar(Enquete enquete) {
+        this.enquete = enquete;
         this.setTitle("Trabalho Pratico Redes");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(1300, 950);
@@ -38,6 +37,11 @@ public class TelaVotar extends JFrame {
     }
 
     private void barraInformacoes(JLayeredPane pane) {
+        List<Candidato> candidatos = enquete.getCandidatos();
+        String tempo = enquete.getTempoDuracao();
+        String abertura = enquete.getTempoAbertura();
+        boolean status = enquete.isStatus();
+
         int barraAltura = 90;
         JPanel barra = new JPanel();
         barra.setLayout(null);
@@ -80,6 +84,7 @@ public class TelaVotar extends JFrame {
     }
 
     private void adicionarCardsGrid(JLayeredPane pane) {
+        List<Candidato> candidatos = enquete.getCandidatos();
         int cardsPorLinha = 6;
         int cardWidth = 170;
         int cardHeight = 140;
