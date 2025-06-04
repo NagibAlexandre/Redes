@@ -18,7 +18,7 @@ public class Main {
                 new Candidato("Larissa"),
                 new Candidato("Marcos"));
 
-        MyFrame frame = new MyFrame(candidatos);
+        TelaVotar frame = new TelaVotar(candidatos);
 
     }
 }

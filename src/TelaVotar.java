@@ -2,15 +2,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
-public class MyFrame extends JFrame {
+public class TelaVotar extends JFrame {
 
     private List<Candidato> candidatos;
     private static String tempo = "00:00:00"; // Placeholder for time, can be updated with a timer
     private static String abertura = "01/06/2024 14:00"; // Placeholder for opening time
     private static boolean status = false; // false for open, true for closed
 
-
-    public MyFrame(List<Candidato> candidatos) {
+    public TelaVotar(List<Candidato> candidatos) {
         this.candidatos = candidatos;
         this.setTitle("Trabalho Pratico Redes");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
