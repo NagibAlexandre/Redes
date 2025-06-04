@@ -1,3 +1,5 @@
+package model;
+
 public class Candidato {
     private final String nome;
     private int votos;
