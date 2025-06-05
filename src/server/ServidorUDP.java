@@ -45,7 +45,7 @@ public class ServidorUDP {
                     DatagramPacket pacote = new DatagramPacket(
                             buffer,
                             buffer.length,
-                            InetAddress.getByName("127.255.255.255"),
+                            InetAddress.getByName("255.255.255.255"),
                             PORTA_CLIENTE);
 
                     socket.send(pacote);

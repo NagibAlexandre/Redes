@@ -37,7 +37,7 @@ public class ServidorTCP {
                         new Candidato("Larissa"),
                         new Candidato("Marcos")),
                 tempoAbertura,
-                "00:00:10",
+                "00:01:00",
                 true);
 
         ServidorUDP.iniciar(enquete);

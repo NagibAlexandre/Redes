@@ -97,7 +97,7 @@ public class TelaVotar extends JFrame implements ClienteUDP.AtualizacaoListener 
         statusLabel.setForeground(textColor);
         statusLabel.setBounds(30, 10, 250, 30);
 
-        JLabel tempoLabel = new JLabel("Tempo: " + tempo + " | " + "Abertura: " + abertura);
+        JLabel tempoLabel = new JLabel("Duração: " + tempo + " | " + "Abertura: " + abertura);
         tempoLabel.setFont(subFont);
         tempoLabel.setForeground(textColor);
         tempoLabel.setBounds(30, 45, 350, 25);
@@ -111,7 +111,7 @@ public class TelaVotar extends JFrame implements ClienteUDP.AtualizacaoListener 
         }
         String maisVotadoStr = maisVotado != null ? maisVotado.getNome() + " - " + maisVotado.getVotos() + " votos"
                 : "-";
-        JLabel maisVotadoLabel = new JLabel((status ? "Mais Votado " : "Ganhador ") + maisVotadoStr);
+        JLabel maisVotadoLabel = new JLabel((status ? "Mais Votado: " : "Ganhador: ") + maisVotadoStr);
         maisVotadoLabel.setFont(infoFont);
         maisVotadoLabel.setForeground(textColor);
         maisVotadoLabel.setBounds(700, 25, 450, 30);
