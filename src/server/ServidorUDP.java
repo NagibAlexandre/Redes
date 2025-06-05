@@ -42,8 +42,8 @@ public class ServidorUDP {
                     DatagramPacket pacote = new DatagramPacket(
                             buffer,
                             buffer.length,
-                            InetAddress.getByName("127.255.255.255"),
-                            PORTA_CLIENTE);
+                            InetAddress.getByName("255.255.255.255"),// Broadcast para todos os hosts na rede local
+                    PORTA_CLIENTE);
 
                     socket.send(pacote);
                     System.out.println("Informações enviadas via UDP para porta " + PORTA_CLIENTE);
