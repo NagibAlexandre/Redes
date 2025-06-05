@@ -34,7 +34,9 @@ public class ClienteUDP {
                     if (linhas.length >= 4) {
                         String titulo = linhas[0];
                         boolean status = Boolean.parseBoolean(linhas[1]);
-                        LocalDateTime tempoAbertura = LocalDateTime.parse(linhas[2]);
+                        String tempoAberturaStr = linhas[2];
+                        System.out.println("Tempo de abertura recebido via UDP: " + tempoAberturaStr);
+                        LocalDateTime tempoAbertura = LocalDateTime.parse(tempoAberturaStr);
                         String tempoDuracao = linhas[3];
 
                         List<Candidato> candidatos = new ArrayList<>();
@@ -52,7 +54,8 @@ public class ClienteUDP {
                         }
 
                         ultimaEnquete = new Enquete(titulo, candidatos, tempoAbertura, tempoDuracao, status);
-                        System.out.println("Enquete atualizada via UDP - Total de candidatos: " + candidatos.size());
+                        System.out.println("Enquete atualizada via UDP - Total de candidatos: " + candidatos.size() +
+                                " - Tempo de abertura: " + ultimaEnquete.getTempoAbertura());
 
                         // Notifica o listener sobre a atualização
                         if (listener != null) {

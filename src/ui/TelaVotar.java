@@ -111,7 +111,7 @@ public class TelaVotar extends JFrame implements ClienteUDP.AtualizacaoListener 
         }
         String maisVotadoStr = maisVotado != null ? maisVotado.getNome() + " - " + maisVotado.getVotos() + " votos"
                 : "-";
-        JLabel maisVotadoLabel = new JLabel("Mais votado: " + maisVotadoStr);
+        JLabel maisVotadoLabel = new JLabel((status ? "Mais Votado " : "Ganhador ") + maisVotadoStr);
         maisVotadoLabel.setFont(infoFont);
         maisVotadoLabel.setForeground(textColor);
         maisVotadoLabel.setBounds(700, 25, 450, 30);

@@ -48,7 +48,9 @@ public class ClienteTCP {
             boolean status = Boolean.parseBoolean(entrada.readLine());
 
             // Lê os tempos
-            LocalDateTime tempoAbertura = LocalDateTime.parse(entrada.readLine());
+            String tempoAberturaStr = entrada.readLine();
+            System.out.println("Tempo de abertura recebido do servidor: " + tempoAberturaStr);
+            LocalDateTime tempoAbertura = LocalDateTime.parse(tempoAberturaStr);
             String tempoDuracao = entrada.readLine();
 
             // Lê a lista de candidatos e seus votos
@@ -67,10 +69,13 @@ public class ClienteTCP {
                 }
             }
 
-            return new Enquete(titulo, candidatos, tempoAbertura, tempoDuracao, status);
+            Enquete enquete = new Enquete(titulo, candidatos, tempoAbertura, tempoDuracao, status);
+            System.out.println("Enquete criada com tempo de abertura: " + enquete.getTempoAbertura());
+            return enquete;
 
         } catch (Exception e) {
             System.err.println("Erro ao obter informações da enquete: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }

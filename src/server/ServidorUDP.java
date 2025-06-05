@@ -23,10 +23,13 @@ public class ServidorUDP {
                 System.out.println("\nServidor UDP iniciado na porta " + PORTA_SERVIDOR);
 
                 while (rodando) {
+                    // Verifica o status atual da enquete
+                    boolean statusAtual = enquete.isStatus();
+
                     // Prepara os dados para envio
                     StringBuilder dados = new StringBuilder();
                     dados.append(enquete.getTitulo()).append("\n");
-                    dados.append(enquete.isStatus()).append("\n");
+                    dados.append(statusAtual).append("\n");
                     dados.append(enquete.getTempoAbertura()).append("\n");
                     dados.append(enquete.getTempoDuracao()).append("\n");
 
@@ -42,11 +45,12 @@ public class ServidorUDP {
                     DatagramPacket pacote = new DatagramPacket(
                             buffer,
                             buffer.length,
-                            InetAddress.getByName("255.255.255.255"),// Broadcast para todos os hosts na rede local
-                    PORTA_CLIENTE);
+                            InetAddress.getByName("127.255.255.255"),
+                            PORTA_CLIENTE);
 
                     socket.send(pacote);
-                    System.out.println("Informações enviadas via UDP para porta " + PORTA_CLIENTE);
+                    System.out.println("Informações enviadas via UDP para porta " + PORTA_CLIENTE +
+                            " - Status: " + (statusAtual ? "Aberta" : "Fechada"));
 
                     // Aguarda 1 segundo antes da próxima atualização
                     Thread.sleep(1000);
