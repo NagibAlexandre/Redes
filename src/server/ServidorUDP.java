@@ -78,4 +78,24 @@ public class ServidorUDP {
             socket.close();
         }
     }
+
+    public static void enviarAtualizacaoEnquetes() {
+        try {
+            DatagramSocket socket = new DatagramSocket();
+            String mensagem = "atualizar-enquetes";
+            byte[] buffer = mensagem.getBytes();
+
+            // IP de broadcast
+            InetAddress endereco = InetAddress.getByName("255.255.255.255");
+            DatagramPacket pacote = new DatagramPacket(buffer, buffer.length, endereco, 9876);
+
+            socket.setBroadcast(true);
+            socket.send(pacote);
+            socket.close();
+
+            System.out.println("[UDP] Atualização enviada via broadcast.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

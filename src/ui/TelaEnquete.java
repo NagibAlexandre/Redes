@@ -2,22 +2,18 @@ package ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import model.Enquete;
-import model.Candidato;
 import client.ClienteTCP;
 import client.ClienteUDP;
 
-public class TelaEnquete extends JFrame implements ClienteUDP.AtualizacaoListener {
+public class TelaEnquete extends JFrame {
     private JLayeredPane layeredPane;
     private List<Enquete> enquetes;
-    private JPanel cardsPanel;
 
     public TelaEnquete() {
         this.setTitle("Trabalho Pratico Redes");
-        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(1300, 950);
         this.setResizable(false);
         this.setLocationRelativeTo(null);
@@ -32,24 +28,25 @@ public class TelaEnquete extends JFrame implements ClienteUDP.AtualizacaoListene
         layeredPane.setPreferredSize(new Dimension(1300, 950));
         layeredPane.add(background, JLayeredPane.DEFAULT_LAYER);
 
-        // Inicializa a lista de enquetes com dados do servidor
         enquetes = ClienteTCP.listarEnquetes();
         if (enquetes != null) {
             adicionarBarraSuperior(layeredPane);
-            cardsPanel = new JPanel();
-            cardsPanel.setLayout(null);
-            cardsPanel.setBounds(0, 90, 1300, 860);
-            cardsPanel.setOpaque(false);
-            layeredPane.add(cardsPanel, JLayeredPane.PALETTE_LAYER);
-            atualizarListaEnquetes();
+            adicionarListaEnquetes(layeredPane);
         }
-
-        // Inicia o cliente UDP
-        ClienteUDP.iniciarRecebimento(this);
 
         this.setContentPane(layeredPane);
         this.pack();
         this.setVisible(true);
+
+        // Inicia o listener UDP para atualizações
+        ClienteUDP.iniciarRecebimento(enquetes -> {
+            // Callback automático quando novas enquetes são recebidas via UDP
+            SwingUtilities.invokeLater(() -> {
+                System.out.println("[UDP] Atualizando enquetes recebidas...");
+                atualizarEnquetesComDados(enquetes); // ou atualizarEnquetes(), se já acessa
+                                                     // ClienteUDP.getUltimasEnquetes()
+            });
+        });
     }
 
     private void adicionarBarraSuperior(JLayeredPane pane) {
@@ -62,7 +59,7 @@ public class TelaEnquete extends JFrame implements ClienteUDP.AtualizacaoListene
         Font infoFont = new Font("Segoe UI", Font.BOLD, 18);
         Color textColor = new Color(230, 230, 230);
 
-        JLabel tituloLabel = new JLabel("Enquetes Disponiveis");
+        JLabel tituloLabel = new JLabel("Enquetes Disponíveis");
         tituloLabel.setFont(infoFont);
         tituloLabel.setForeground(textColor);
         tituloLabel.setBounds(30, 25, 300, 30);
@@ -88,15 +85,12 @@ public class TelaEnquete extends JFrame implements ClienteUDP.AtualizacaoListene
         pane.add(barra, JLayeredPane.PALETTE_LAYER);
     }
 
-    private void atualizarListaEnquetes() {
-        // Limpa o painel de cards
-        cardsPanel.removeAll();
-
+    private void adicionarListaEnquetes(JLayeredPane pane) {
         int cardWidth = 300;
         int cardHeight = 180;
         int spacing = 30;
         int startX = 60;
-        int startY = 30;
+        int startY = 120;
         int cardsPorLinha = 4;
 
         Color cardBg = new Color(60, 60, 60, 220);
@@ -162,30 +156,31 @@ public class TelaEnquete extends JFrame implements ClienteUDP.AtualizacaoListene
             card.add(duracaoLabel);
             card.add(candidatosLabel);
             card.add(entrarButton);
-            cardsPanel.add(card);
+            pane.add(card, JLayeredPane.PALETTE_LAYER);
         }
-
-        cardsPanel.revalidate();
-        cardsPanel.repaint();
     }
 
+    private void atualizarEnquetesComDados(List<Enquete> novasEnquetes) {
+    SwingUtilities.invokeLater(() -> {
+        if (novasEnquetes != null) {
+            this.enquetes = novasEnquetes;
+            layeredPane.removeAll();
+
+            BackgroundLabel background = new BackgroundLabel("PUC MINAS");
+            background.setBounds(0, 0, 1300, 950);
+            layeredPane.add(background, JLayeredPane.DEFAULT_LAYER);
+
+            adicionarBarraSuperior(layeredPane);
+            adicionarListaEnquetes(layeredPane);
+
+            layeredPane.repaint();
+            layeredPane.revalidate();
+        }
+    });
+}
     private void abrirTelaVotar(Enquete enquete) {
         TelaVotar telaVotar = new TelaVotar(enquete);
         telaVotar.setVisible(true);
         this.dispose();
-    }
-
-    @Override
-    public void onAtualizacao(List<Enquete> enquetesAtualizadas) {
-        SwingUtilities.invokeLater(() -> {
-            enquetes = enquetesAtualizadas;
-            atualizarListaEnquetes();
-        });
-    }
-
-    @Override
-    public void dispose() {
-        ClienteUDP.parar();
-        super.dispose();
     }
 }

@@ -2,7 +2,6 @@ package client;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -125,4 +124,5 @@ public class ClienteUDP {
     public interface AtualizacaoListener {
         void onAtualizacao(List<Enquete> enquetes);
     }
+
 }
