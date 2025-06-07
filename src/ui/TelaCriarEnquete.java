@@ -171,6 +171,13 @@ public class TelaCriarEnquete extends JFrame {
     private void adicionarCandidato() {
         String nome = candidatoField.getText().trim();
         if (!nome.isEmpty()) {
+            if (candidatosListModel.size() >= 30) {
+                JOptionPane.showMessageDialog(this,
+                        "Limite máximo de 30 candidatos atingido!",
+                        "Limite Excedido",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             candidatosListModel.addElement(nome);
             candidatoField.setText("");
             candidatoField.requestFocus();

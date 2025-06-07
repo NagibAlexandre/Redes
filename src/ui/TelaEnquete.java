@@ -10,6 +10,7 @@ import client.ClienteUDP;
 public class TelaEnquete extends JFrame {
     private JLayeredPane layeredPane;
     private List<Enquete> enquetes;
+    private JScrollPane enquetesScrollPane;
 
     public TelaEnquete() {
         this.setTitle("Trabalho Pratico Redes");
@@ -32,6 +33,10 @@ public class TelaEnquete extends JFrame {
         if (enquetes != null) {
             adicionarBarraSuperior(layeredPane);
             adicionarListaEnquetes(layeredPane);
+        } else {
+            // If enquetes is null, maybe show an error or empty state
+            System.out.println("Nenhuma enquete disponível.");
+            adicionarBarraSuperior(layeredPane);
         }
 
         this.setContentPane(layeredPane);
@@ -88,9 +93,9 @@ public class TelaEnquete extends JFrame {
     private void adicionarListaEnquetes(JLayeredPane pane) {
         int cardWidth = 300;
         int cardHeight = 180;
-        int spacing = 30;
-        int startX = 60;
-        int startY = 120;
+        int spacing = 20;
+        int initialYPadding = 30;
+        int startX = 20;
         int cardsPorLinha = 4;
 
         Color cardBg = new Color(60, 60, 60, 220);
@@ -99,12 +104,26 @@ public class TelaEnquete extends JFrame {
         Font infoFont = new Font("Segoe UI", Font.PLAIN, 14);
         Font buttonFont = new Font("Segoe UI", Font.BOLD, 14);
 
+        // Create a panel to hold all cards
+        JPanel cardsPanel = new JPanel();
+        cardsPanel.setLayout(null);
+        cardsPanel.setOpaque(false);
+
+        // Calculate total height needed for the cardsPanel
+        int totalRows = (int) Math.ceil((double) enquetes.size() / cardsPorLinha);
+        int contentHeight = (totalRows * cardHeight) + (totalRows > 0 ? (totalRows - 1) * spacing : 0);
+        int calculatedHeight = initialYPadding + contentHeight + initialYPadding; // Add padding at bottom
+        if (enquetes.isEmpty()) {
+            calculatedHeight = 100; // A reasonable default height if no enquetes
+        }
+        cardsPanel.setPreferredSize(new Dimension(1300, calculatedHeight));
+
         for (int i = 0; i < enquetes.size(); i++) {
             Enquete enquete = enquetes.get(i);
             int linha = i / cardsPorLinha;
             int coluna = i % cardsPorLinha;
             int x = startX + coluna * (cardWidth + spacing);
-            int y = startY + linha * (cardHeight + spacing);
+            int y = initialYPadding + linha * (cardHeight + spacing);
 
             JPanel card = new JPanel() {
                 @Override
@@ -156,28 +175,43 @@ public class TelaEnquete extends JFrame {
             card.add(duracaoLabel);
             card.add(candidatosLabel);
             card.add(entrarButton);
-            pane.add(card, JLayeredPane.PALETTE_LAYER);
+            cardsPanel.add(card);
         }
+
+        // Create scroll pane and assign to member variable
+        this.enquetesScrollPane = new JScrollPane(cardsPanel);
+        this.enquetesScrollPane.setBounds(0, 90, 1300, 860); // Position below the top bar
+        this.enquetesScrollPane.setOpaque(false);
+        this.enquetesScrollPane.getViewport().setOpaque(false);
+        this.enquetesScrollPane.setBorder(null);
+
+        // Customize scrollbar appearance
+        this.enquetesScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        this.enquetesScrollPane.getVerticalScrollBar().setBackground(new Color(40, 40, 40));
+        this.enquetesScrollPane.getVerticalScrollBar().setForeground(new Color(100, 100, 100));
+
+        pane.add(this.enquetesScrollPane, JLayeredPane.PALETTE_LAYER);
     }
 
     private void atualizarEnquetesComDados(List<Enquete> novasEnquetes) {
-    SwingUtilities.invokeLater(() -> {
-        if (novasEnquetes != null) {
-            this.enquetes = novasEnquetes;
-            layeredPane.removeAll();
+        SwingUtilities.invokeLater(() -> {
+            if (novasEnquetes != null) {
+                this.enquetes = novasEnquetes;
 
-            BackgroundLabel background = new BackgroundLabel("PUC MINAS");
-            background.setBounds(0, 0, 1300, 950);
-            layeredPane.add(background, JLayeredPane.DEFAULT_LAYER);
+                // Remove existing scroll pane if it exists
+                if (this.enquetesScrollPane != null) {
+                    layeredPane.remove(this.enquetesScrollPane);
+                }
 
-            adicionarBarraSuperior(layeredPane);
-            adicionarListaEnquetes(layeredPane);
+                // Only re-add the list of enquetes, the background and top bar are permanent
+                adicionarListaEnquetes(layeredPane);
 
-            layeredPane.repaint();
-            layeredPane.revalidate();
-        }
-    });
-}
+                layeredPane.repaint();
+                layeredPane.revalidate();
+            }
+        });
+    }
+
     private void abrirTelaVotar(Enquete enquete) {
         TelaVotar telaVotar = new TelaVotar(enquete);
         telaVotar.setVisible(true);
