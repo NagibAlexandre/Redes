@@ -90,24 +90,44 @@ public class ClienteTCP {
     public static String enviarNovaEnquete(String titulo, List<Candidato> candidatos, String tempoAbertura,
             String tempoDuracao, boolean status) {
         try (Socket socket = new Socket(IP_SERVIDOR, PORTA_SERVIDOR)) {
-            // Envia o comando VOTO
+            System.out.println("Conectando ao servidor TCP em " + IP_SERVIDOR + ":" + PORTA_SERVIDOR);
+
+            // Envia o comando CRIAR_ENQUETE
             DataOutputStream saida = new DataOutputStream(socket.getOutputStream());
-            saida.writeBytes("CRIAR_ENQUETE");
+            String comando = "CRIAR_ENQUETE\n";
+            System.out.println("Enviando comando: " + comando.trim());
+            saida.writeBytes(comando);
+
+            // Envia os dados da enquete
+            System.out.println("Enviando título: " + titulo);
             saida.writeBytes(titulo + "\n");
+
+            // Envia os candidatos
+            System.out.println("Enviando " + candidatos.size() + " candidatos:");
             for (Candidato candidato : candidatos) {
-                saida.writeBytes(candidato.getNome() + ":" + candidato.getVotos() + "\n");
+                String linha = candidato.getNome() + ":0";
+                System.out.println("Enviando candidato: " + linha);
+                saida.writeBytes(linha + "\n");
             }
+
+            // Envia os tempos e status
+            System.out.println("Enviando tempo de abertura: " + tempoAbertura);
             saida.writeBytes(tempoAbertura + "\n");
+            System.out.println("Enviando tempo de duração: " + tempoDuracao);
             saida.writeBytes(tempoDuracao + "\n");
+            System.out.println("Enviando status: " + status);
             saida.writeBytes(status + "\n");
 
             // Recebe a resposta do servidor
             BufferedReader entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String resposta = entrada.readLine();
+            System.out.println("Resposta recebida: " + resposta);
 
             return "Enquete criada com sucesso! Servidor respondeu: " + resposta;
 
         } catch (Exception e) {
+            System.err.println("Erro ao criar Enquete: " + e.getMessage());
+            e.printStackTrace();
             return "Erro ao criar Enquete: " + e.getMessage();
         }
     }

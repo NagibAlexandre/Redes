@@ -156,23 +156,38 @@ public class ServidorTCP {
 
             } else if (comando.equals("CRIAR_ENQUETE")) {
                 String titulo = entrada.readLine();
+                System.out.println("Criando nova enquete: " + titulo);
 
-                // Receber a lista de candidatos (até linha vazia ou até todos forem lidos)
+                // Receber a lista de candidatos
                 List<Candidato> candidatos = new ArrayList<>();
                 String linha;
-                while ((linha = entrada.readLine()) != null && !linha.isEmpty()
-                        && !linha.matches("\\d{4}-\\d{2}-\\d{2}T.*")) {
-                    String[] partes = linha.split(":");
-                    String nome = partes[0];
-                    int votos = partes.length > 1 ? Integer.parseInt(partes[1]) : 0;
-                    Candidato candidato = new Candidato(nome);
-                    for (int i = 0; i < votos; i++) {
-                        candidato.incrementarVoto();
+                while ((linha = entrada.readLine()) != null) {
+                    // Se a linha contém uma data, é o tempo de abertura
+                    if (linha.contains("T")) {
+                        break;
                     }
-                    candidatos.add(candidato);
+
+                    // Ignora linhas vazias ou marcadores
+                    if (linha.trim().isEmpty() || linha.equals("FIM_CANDIDATOS")) {
+                        continue;
+                    }
+
+                    String[] partes = linha.split(":");
+                    if (partes.length > 0) {
+                        String nome = partes[0].trim();
+                        if (!nome.isEmpty()) {
+                            int votos = partes.length > 1 ? Integer.parseInt(partes[1]) : 0;
+                            Candidato candidato = new Candidato(nome);
+                            for (int i = 0; i < votos; i++) {
+                                candidato.incrementarVoto();
+                            }
+                            candidatos.add(candidato);
+                            System.out.println("Adicionado candidato: " + nome);
+                        }
+                    }
                 }
 
-                // Receber tempo de abertura
+                // Receber tempo de abertura (já lido no loop acima)
                 LocalDateTime tempoAberturaRecebido = LocalDateTime.parse(linha);
                 String tempoDuracao = entrada.readLine();
                 boolean status = Boolean.parseBoolean(entrada.readLine());
@@ -182,6 +197,7 @@ public class ServidorTCP {
                 enquetes.add(novaEnquete);
 
                 System.out.println("Nova enquete criada: " + titulo);
+                System.out.println("Total de candidatos: " + candidatos.size());
 
                 // Confirmacao para o cliente
                 saida.writeBytes("ENQUETE_CRIADA\n");

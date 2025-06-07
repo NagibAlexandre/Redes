@@ -66,7 +66,13 @@ public class TelaEnquete extends JFrame {
         criarEnqueteButton.setFocusPainted(false);
         criarEnqueteButton.setBorderPainted(false);
         criarEnqueteButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        criarEnqueteButton.addActionListener(e -> abrirTelaCriarEnquete());
+        criarEnqueteButton.addActionListener(e -> {
+            SwingUtilities.invokeLater(() -> {
+                TelaCriarEnquete telaCriarEnquete = new TelaCriarEnquete();
+                telaCriarEnquete.setVisible(true);
+                this.dispose();
+            });
+        });
 
         barra.add(tituloLabel);
         barra.add(criarEnqueteButton);
@@ -152,10 +158,5 @@ public class TelaEnquete extends JFrame {
         TelaVotar telaVotar = new TelaVotar(enquete);
         telaVotar.setVisible(true);
         this.dispose();
-    }
-
-    private void abrirTelaCriarEnquete() {
-        // TODO: Implementar tela de criação de enquete
-        JOptionPane.showMessageDialog(this, "Funcionalidade em desenvolvimento");
     }
 }
