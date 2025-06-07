@@ -10,13 +10,14 @@ import model.Candidato;
 import client.ClienteTCP;
 import client.ClienteUDP;
 
-public class TelaEnquete extends JFrame {
+public class TelaEnquete extends JFrame implements ClienteUDP.AtualizacaoListener {
     private JLayeredPane layeredPane;
     private List<Enquete> enquetes;
+    private JPanel cardsPanel;
 
     public TelaEnquete() {
         this.setTitle("Trabalho Pratico Redes");
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setSize(1300, 950);
         this.setResizable(false);
         this.setLocationRelativeTo(null);
@@ -35,8 +36,16 @@ public class TelaEnquete extends JFrame {
         enquetes = ClienteTCP.listarEnquetes();
         if (enquetes != null) {
             adicionarBarraSuperior(layeredPane);
-            adicionarListaEnquetes(layeredPane);
+            cardsPanel = new JPanel();
+            cardsPanel.setLayout(null);
+            cardsPanel.setBounds(0, 90, 1300, 860);
+            cardsPanel.setOpaque(false);
+            layeredPane.add(cardsPanel, JLayeredPane.PALETTE_LAYER);
+            atualizarListaEnquetes();
         }
+
+        // Inicia o cliente UDP
+        ClienteUDP.iniciarRecebimento(this);
 
         this.setContentPane(layeredPane);
         this.pack();
@@ -79,12 +88,15 @@ public class TelaEnquete extends JFrame {
         pane.add(barra, JLayeredPane.PALETTE_LAYER);
     }
 
-    private void adicionarListaEnquetes(JLayeredPane pane) {
+    private void atualizarListaEnquetes() {
+        // Limpa o painel de cards
+        cardsPanel.removeAll();
+
         int cardWidth = 300;
         int cardHeight = 180;
         int spacing = 30;
         int startX = 60;
-        int startY = 120;
+        int startY = 30;
         int cardsPorLinha = 4;
 
         Color cardBg = new Color(60, 60, 60, 220);
@@ -150,13 +162,30 @@ public class TelaEnquete extends JFrame {
             card.add(duracaoLabel);
             card.add(candidatosLabel);
             card.add(entrarButton);
-            pane.add(card, JLayeredPane.PALETTE_LAYER);
+            cardsPanel.add(card);
         }
+
+        cardsPanel.revalidate();
+        cardsPanel.repaint();
     }
 
     private void abrirTelaVotar(Enquete enquete) {
         TelaVotar telaVotar = new TelaVotar(enquete);
         telaVotar.setVisible(true);
         this.dispose();
+    }
+
+    @Override
+    public void onAtualizacao(List<Enquete> enquetesAtualizadas) {
+        SwingUtilities.invokeLater(() -> {
+            enquetes = enquetesAtualizadas;
+            atualizarListaEnquetes();
+        });
+    }
+
+    @Override
+    public void dispose() {
+        ClienteUDP.parar();
+        super.dispose();
     }
 }

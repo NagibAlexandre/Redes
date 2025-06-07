@@ -49,7 +49,7 @@ public class ServidorTCP {
                 "Dia da prova de Redes",
                 Arrays.asList(
                         new Candidato("Segunda"),
-                        new Candidato("Terceira"),
+                        new Candidato("Terca"),
                         new Candidato("Quarta"),
                         new Candidato("Quinta"),
                         new Candidato("Sexta"),
