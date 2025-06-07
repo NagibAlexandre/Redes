@@ -1,10 +1,9 @@
 package main;
 
-import ui.TelaVotar;
+import ui.TelaEnquete;
 
 public class Main {
     public static void main(String[] args) {
-
-        TelaVotar frame = new TelaVotar();
+        TelaEnquete frame = new TelaEnquete();
     }
 }

@@ -4,8 +4,10 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.UUID;
 
 public class Enquete {
+    private String id; // UUID como ID único da enquete
     private String titulo;
     private List<Candidato> candidatos;
     private LocalDateTime tempoAbertura;
@@ -14,6 +16,7 @@ public class Enquete {
 
     public Enquete(String titulo, List<Candidato> candidatos, LocalDateTime tempoAbertura, String tempoDuracao,
             boolean status) {
+        this.id = UUID.randomUUID().toString(); // Gera um UUID único
         this.titulo = titulo;
         this.candidatos = candidatos;
         this.tempoAbertura = tempoAbertura;
@@ -25,6 +28,30 @@ public class Enquete {
                 .plusSeconds(duracaoTime.getSecond());
 
         this.status = status;
+    }
+
+    public Enquete(String titulo, LocalDateTime tempoAbertura, String tempoDuracao,
+            boolean status) {
+        this.id = UUID.randomUUID().toString(); // Gera um UUID único
+        this.titulo = titulo;
+        this.candidatos = null;
+        this.tempoAbertura = tempoAbertura;
+
+        // Parse da duração (formato HH:mm:ss)
+        LocalTime duracaoTime = LocalTime.parse(tempoDuracao);
+        this.tempoDuracao = Duration.ofHours(duracaoTime.getHour())
+                .plusMinutes(duracaoTime.getMinute())
+                .plusSeconds(duracaoTime.getSecond());
+
+        this.status = status;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getTitulo() {

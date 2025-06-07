@@ -9,6 +9,12 @@ public class Candidato {
         this.votos = 0;
     }
 
+     public Candidato(String nome, int votos) {
+        this.nome = nome;
+        this.votos = votos;
+    }
+
+
     public String getNome() {
         return nome;
     }

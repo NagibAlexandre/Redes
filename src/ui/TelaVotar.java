@@ -14,9 +14,11 @@ public class TelaVotar extends JFrame implements ClienteUDP.AtualizacaoListener 
     private Enquete enquete;
     private JLayeredPane layeredPane;
 
-    public TelaVotar() {
+    public TelaVotar(Enquete enquete) {
+        this.enquete = enquete;
+        System.out.println("TelaVotar iniciada com enquete ID: " + enquete.getId());
         this.setTitle("Trabalho Pratico Redes");
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setSize(1300, 950);
         this.setResizable(false);
         this.setLocationRelativeTo(null);
@@ -31,8 +33,6 @@ public class TelaVotar extends JFrame implements ClienteUDP.AtualizacaoListener 
         layeredPane.setPreferredSize(new Dimension(1300, 950));
         layeredPane.add(background, JLayeredPane.DEFAULT_LAYER);
 
-        // Inicializa a enquete com dados do servidor
-        enquete = ClienteTCP.obterInformacoesEnquete();
         if (enquete != null) {
             barraInformacoes(layeredPane);
             adicionarCardsGrid(layeredPane);
@@ -44,14 +44,31 @@ public class TelaVotar extends JFrame implements ClienteUDP.AtualizacaoListener 
         this.setContentPane(layeredPane);
         this.pack();
         this.setVisible(true);
+
+        // Adiciona listener para quando a janela for fechada
+        this.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                ClienteUDP.parar();
+            }
+        });
     }
 
     @Override
-    public void onAtualizacao(Enquete novaEnquete) {
+    public void onAtualizacao(List<Enquete> enquetes) {
         // Atualiza a UI na thread de eventos
         SwingUtilities.invokeLater(() -> {
-            enquete = novaEnquete;
-            atualizarUI();
+            System.out.println("Recebida atualização UDP. Enquete atual ID: " + enquete.getId());
+            // Encontra a enquete atual na lista de atualizações
+            for (Enquete e : enquetes) {
+                System.out.println("Comparando com enquete ID: " + e.getId());
+                if (e.getId().equals(enquete.getId())) {
+                    System.out.println("Enquete encontrada, atualizando UI");
+                    enquete = e;
+                    atualizarUI();
+                    break;
+                }
+            }
         });
     }
 
@@ -73,14 +90,12 @@ public class TelaVotar extends JFrame implements ClienteUDP.AtualizacaoListener 
     }
 
     private void barraInformacoes(JLayeredPane pane) {
-        
-        List<Candidato> candidatos = enquete.getCandidatos(); 
+        List<Candidato> candidatos = enquete.getCandidatos();
         boolean status = enquete.isStatus();
-        
-        //formatar tempo
+
+        // formatar tempo
         String tempo = enquete.getTempoDuracao();
         String abertura = formatar(enquete.getTempoAbertura());
-       
 
         int barraAltura = 90;
         JPanel barra = new JPanel();
@@ -92,15 +107,35 @@ public class TelaVotar extends JFrame implements ClienteUDP.AtualizacaoListener 
         Font subFont = new Font("Segoe UI", Font.PLAIN, 15);
         Color textColor = new Color(230, 230, 230);
 
+        // Adiciona botão Voltar
+        JButton voltarButton = new JButton("← Voltar");
+        voltarButton.setBounds(30, 25, 120, 40);
+        voltarButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        voltarButton.setForeground(textColor);
+        voltarButton.setBackground(new Color(100, 100, 100));
+        voltarButton.setFocusPainted(false);
+        voltarButton.setBorderPainted(false);
+        voltarButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        voltarButton.addActionListener(e -> {
+            // Para o recebimento UDP antes de fechar a tela
+            ClienteUDP.parar();
+            // Cria nova instância da tela de enquetes
+            SwingUtilities.invokeLater(() -> {
+                TelaEnquete telaEnquete = new TelaEnquete();
+                telaEnquete.setVisible(true);
+                this.dispose();
+            });
+        });
+
         JLabel statusLabel = new JLabel("Votação " + (status ? "aberta" : "fechada"));
         statusLabel.setFont(infoFont);
         statusLabel.setForeground(textColor);
-        statusLabel.setBounds(30, 10, 250, 30);
+        statusLabel.setBounds(180, 10, 250, 30);
 
         JLabel tempoLabel = new JLabel("Duração: " + tempo + " | " + "Abertura: " + abertura);
         tempoLabel.setFont(subFont);
         tempoLabel.setForeground(textColor);
-        tempoLabel.setBounds(30, 45, 350, 25);
+        tempoLabel.setBounds(180, 45, 350, 25);
 
         // Encontrar candidato mais votado
         Candidato maisVotado = null;
@@ -117,6 +152,7 @@ public class TelaVotar extends JFrame implements ClienteUDP.AtualizacaoListener 
         maisVotadoLabel.setBounds(700, 25, 450, 30);
         maisVotadoLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
+        barra.add(voltarButton);
         barra.add(statusLabel);
         barra.add(tempoLabel);
         barra.add(maisVotadoLabel);
@@ -190,7 +226,10 @@ public class TelaVotar extends JFrame implements ClienteUDP.AtualizacaoListener 
             votarButton.setBorderPainted(false);
             votarButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
             votarButton.addActionListener(e -> {
-                String resposta = ClienteTCP.enviarVoto(candidato.getNome());
+                System.out.println(
+                        "Enviando voto para candidato: " + candidato.getNome() + " na enquete: " + enquete.getId());
+                String resposta = ClienteTCP.enviarVoto(candidato.getNome(), enquete.getId());
+                System.out.println("Resposta do servidor: " + resposta);
                 JOptionPane.showMessageDialog(null, resposta);
                 atualizarUI(); // Atualiza imediatamente após votar
             });
@@ -202,11 +241,11 @@ public class TelaVotar extends JFrame implements ClienteUDP.AtualizacaoListener 
         }
     }
 
-     private static String formatar(LocalDateTime tempoAbertura) {
-        
+    private static String formatar(LocalDateTime tempoAbertura) {
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         LocalDateTime agora = LocalDateTime.now();
-      
-        return  agora.format(formatter);
+
+        return agora.format(formatter);
     }
 }
